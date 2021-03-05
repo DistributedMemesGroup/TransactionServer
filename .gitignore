@@ -1,0 +1,8 @@
+# Editor Specific Files
+.idea/
+.vscode/
+.code/
+TransactionServer.iml
+
+# Build directories
+/out
