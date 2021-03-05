@@ -1,7 +1,4 @@
-package locking;
-
-import locking.Lock;
-
+package concurrency.locking;
 
 class LockManager {
     Iterable<Lock> locks;
