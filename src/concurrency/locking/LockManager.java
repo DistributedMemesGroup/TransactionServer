@@ -29,12 +29,13 @@ class LockManager {
                 targetLock = new Lock(inputAccount);
                 locks.add(targetLock);
             }
-            // Since we found or created the lock, acquire it.
+            // Since we found or created the lock, acquire it.S
             targetLock.acquire(trans, lockType);
         }
     }
 
     public synchronized void unlock(Transaction trans) {
+        //Release all locks that contain the trans as a holder.
         for (Lock currLock : locks) {
             if (currLock.holders.contains(trans)) {
                 currLock.release(trans);
