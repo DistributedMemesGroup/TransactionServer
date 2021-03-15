@@ -1,7 +1,6 @@
 package concurrency.transaction;
 
 import java.util.List;
-
 import concurrency.locking.Lock;
 
 public class Transaction {

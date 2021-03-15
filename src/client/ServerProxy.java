@@ -1,52 +1,72 @@
 package client;
 
-import java.net.Inet4Address;
-import java.net.ServerSocket;
+import messages.*;
 import java.net.Socket;
 import java.io.*;
-import java.net.Socket;
 
 public class ServerProxy implements Runnable {
-    final Socket transactionSocket;
-    final ObjectOutputStream outputStream;
-    final ObjectInputStream inputStream;
-    int IP, port;
+    String IP;
+    int port;
 
-    public ServerProxy(Socket inputSocket, int ip, int port) throws IOException {
+    public ServerProxy(String ip, int port) throws IOException {
         this.IP = ip;
         this.port = port;
-        this.transactionSocket = inputSocket;
-        outputStream = new ObjectOutputStream(transactionSocket.getOutputStream());
-        outputStream.flush();
-        inputStream = new ObjectInputStream(transactionSocket.getInputStream());
     }
 
-    public void writeBalance() {
-        try {
-            System.out.println("its just jokes");
-            /*
-             * writeMessage message = new writeMessage(int accountNumber, int amount) Object
-             * toClient = outputStream.writeObject(message);
-             */
-        } catch (Exception e) {
-            System.out.println("Couldn't open transaction socket!");
+    private Socket openConnection() throws IOException {
+        return new Socket(IP, port);
+    }
+
+    public void write(long accountNumber, long amount) {
+        WriteMessage message = new WriteMessage(accountNumber, amount);
+        try (var conn = openConnection()) {
+            var oos = new ObjectOutputStream(conn.getOutputStream());
+            oos.writeObject(message);
+        } catch (IOException e) {
+            System.err.println("Couldn't write to transaction socket!");
             e.printStackTrace();
         }
-
     }
 
-    public void showBalance() {
-        try (transactionSocket; outputStream; inputStream) {
-            // Notify the user of a new connection
-            synchronized (System.out) {
-                System.out.println("Transaction node connected!");
-            }
-            // Get info from connection
-            Object fromClient = inputStream.readObject();
-
-            // set variables
+    // Returns -1 on error
+    public long read(long accountNumber) {
+        ReadMessage message = new ReadMessage(accountNumber);
+        long balance = -1;
+        try (var conn = openConnection()) {
+            // Notify the user of a new connection\
+            var oos = new ObjectOutputStream(conn.getOutputStream());
+            var ois = new ObjectInputStream(conn.getInputStream());
+            oos.writeObject(message);
+            balance = ois.readLong();
         } catch (Exception e) {
-            System.out.println("Couldn't open transaction socket!");
+            System.err.println("Couldn't read from transaction socket!");
+            e.printStackTrace();
+        }
+        return balance;
+    }
+
+    // Returns -1 on error
+    public long openTransaction() {
+        try (var conn = openConnection()) {
+            // Notify the user of a new connection\
+            var oos = new ObjectOutputStream(conn.getOutputStream());
+            var ois = new ObjectInputStream(conn.getInputStream());
+            oos.writeObject(new OpenMessage());
+            return ois.readLong();
+        } catch (Exception e) {
+            System.err.println("Couldn't open transaction!");
+            e.printStackTrace();
+            return -1l;
+        }
+    }
+
+    public void closeTransaction(long transactionID) {
+        try (var conn = openConnection()) {
+            // Notify the user of a new connection\
+            var oos = new ObjectOutputStream(conn.getOutputStream());
+            oos.writeObject(new CloseMessage(transactionID));
+        } catch (Exception e) {
+            System.err.println("Couldn't close transaction!");
             e.printStackTrace();
         }
     }

@@ -1,7 +1,6 @@
 package account;
 
 import java.util.List;
-import concurrency.locking.*;
 
 public class AccountManager {
     List<Account> accounts;

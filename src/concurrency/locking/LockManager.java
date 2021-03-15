@@ -35,7 +35,7 @@ class LockManager {
     }
 
     public synchronized void unlock(Transaction trans) {
-        //Release all locks that contain the trans as a holder.
+        // Release all locks that contain the trans as a holder.
         for (Lock currLock : locks) {
             if (currLock.holders.contains(trans)) {
                 currLock.release(trans);

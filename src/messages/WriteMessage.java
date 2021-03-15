@@ -8,6 +8,5 @@ public class WriteMessage extends Message {
         super(MessageType.WRITE);
         this.accountNumber = accountNumber;
         this.amount = amount;
-
     }
 }
