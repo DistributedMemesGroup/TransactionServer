@@ -27,21 +27,28 @@ public class Lock {
 
     public synchronized void acquire(Transaction newTrans, LockType desiredType) {
         // Check this lock type
-        switch (this.lockType) {
-        // This lock is currently held as a write lock
-        case WRITE:
+        // while (!(holders.isEmpty()))
+        // Write lock, only allow one transaction
+        // Else read lock, allow multiple transacs to acquire read lock
 
-        case READ:
-            // If set to read, and desired lock is of type read, gucci
-            if (desiredType == LockType.READ) {
-                holders.add(newTrans);
-            }
-            // No one acquired the lock, so no type was set
-        default:
+    }
 
+    public synchronized void release(Transaction releasingTrans) {
+        // Check this lock type
+        if (holders.contains(releasingTrans)) {
+            holders.remove(releasingTrans);
         }
         // Write lock, only allow one transaction
         // Else read lock, allow multiple transacs to acquire read lock
 
     }
+
+    public boolean isOnlyHolder(Transaction trans) {
+        return this.holders.size() == 1 && holders.contains(trans);
+    }
+
+    public boolean bothReadLocks(LockType inputLockType) {
+        return inputLockType == LockType.READ && this.lockType == LockType.READ;
+    }
+
 }
