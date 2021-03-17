@@ -2,9 +2,11 @@ package concurrency.transaction;
 
 import java.net.Socket;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Hashtable;
 
 public class TransactionManager {
-    List<Transaction> transactions;
+    Hashtable<Integer, Transaction> transactions = new Hashtable<>();
     private static TransactionManager instance = null;
 
     public static TransactionManager getInstance() {
@@ -15,6 +17,7 @@ public class TransactionManager {
     }
 
     public void handleConnection(Socket conn) {
-
+        // Spawn the transacmanagerworkerthread with conn
+        
     }
 }
