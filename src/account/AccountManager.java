@@ -1,9 +1,12 @@
 package account;
 
+import java.util.ArrayList;
 import java.util.List;
+import concurrency.locking.*;
+import concurrency.transaction.Transaction;
 
 public class AccountManager {
-    List<Account> accounts;
+    List<Account> accounts = new ArrayList<>();
 
     private static AccountManager instance = null;
 
@@ -22,28 +25,20 @@ public class AccountManager {
         }
     }
 
-    public int getBalance(int accountID) {
+    public int read(int accountID, Transaction trans) {
         // call upon lockManager to set a read lock
-        // LockManager.setLock(accounts.get(accountID), null, LockType.READ);
+        LockManager.getInstance().setLock(accounts.get(accountID), trans, LockType.READ);
 
         // once lock is set, get the specific account's balance
-        // int bal = accounts.get(accountID).balance;
-
-        // release the lock
-        // LockManager.unlock(null);
-        // return balance;
-        return 0;
+        return accounts.get(accountID).getBalance();
     }
 
-    public boolean adjustBalance(int accountID, int input) {
+    public boolean write(int accountID, int value, Transaction trans) {
         // call upon lockManager to set a write lock
-        // LockManager.setLock(accounts.get(accountID), null, LockType.WRITE);
+        LockManager.getInstance().setLock(accounts.get(accountID), trans, LockType.WRITE);
 
         // once lock is set, get the acccount and adjust the value
-        // accounts.get(accountID).balance += input;
-
-        // release the lock
-        // LockManager.unlock(null);
+        accounts.get(accountID).adjustBalance(value);
 
         // return true to indicate successful
         return true;
