@@ -3,14 +3,21 @@ package concurrency.locking;
 import java.util.List;
 import account.Account;
 import concurrency.transaction.Transaction;
-import java.util.ArrayList;
+import java.util.HashSet;
 
-class LockManager {
-    List<Lock> locks;
-
-    public LockManager() {
+public class LockManager {
+    HashSet<Lock> locks;
+    private static LockManager instance = null;
+    private LockManager() {
         // Init our empty list of locks to start
-        locks = new ArrayList<Lock>();
+        locks = new HashSet<>();
+    }
+
+    public static LockManager getInstance() {
+        if (instance == null) {
+            instance = new LockManager();
+        }
+        return instance;
     }
 
     public void setLock(Account inputAccount, Transaction trans, LockType lockType) {
