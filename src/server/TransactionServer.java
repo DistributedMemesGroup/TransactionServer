@@ -1,13 +1,16 @@
 package server;
 
-import concurrency.transaction.*;
+import concurrency.transaction.TransactionManager;
+import concurrency.locking.LockManager;
+import account.*;
 import java.io.IOException;
 import java.net.ServerSocket;
 
-import concurrency.transaction.TransactionManager;
-
-class TransactionServer {
+public class TransactionServer {
     public final int port;
+    public static final TransactionManager transactionManager = TransactionManager.getInstance();
+    public static final AccountManager accountManager = AccountManager.getInstance();
+    public static final LockManager lockManager = LockManager.getInstance();
 
     public TransactionServer() {
         port = 8001;
@@ -24,16 +27,21 @@ class TransactionServer {
         } else {
             server = new TransactionServer();
         }
-
+        ServerSocket serverSocket = null;
+        try {
+            serverSocket = new ServerSocket(server.port);
+        } catch (IOException e) {
+            System.out.println("Failed to open server socket");
+            e.printStackTrace();
+            System.exit(69);
+        }
+        
         while (true) {
             try {
-                var serverSocket = new ServerSocket(server.port);
-                var clientConn = serverSocket.accept();
-                var manager = TransactionManager.getInstance();
-                manager.handleConnection(clientConn);
-
+                transactionManager.handleConnection(serverSocket.accept());
             } catch (IOException e) {
                 System.out.println("Error");
+                System.exit(69);
             }
         }
     }
