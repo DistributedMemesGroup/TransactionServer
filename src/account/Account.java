@@ -7,7 +7,7 @@ public class Account {
 
     private int id;
 
-    private long balance;
+    private int balance;
     // Lock tied to this account
     public Lock lock;
 
@@ -17,23 +17,17 @@ public class Account {
         idcount++;
     }
 
-    public long getBalance() {
+    public int getBalance() {
         return balance;
     }
 
-    public void transferTo(long amount, Account other) throws IllegalArgumentException {
-        if (amount > balance) {
-            throw new IllegalArgumentException("Cannot transfer more than what is in the account!");
-        }
-        other.balance += amount;
-        this.balance -= amount;
+    public void adjustBalance(int value) {
+        balance += value;
     }
 
-    public boolean equals(Account other) {
-        if (this.id == other.id) {
-            return true;
-        }
-        return false;
+    @Override
+    public boolean equals(Object other) {
+       return other instanceof Account && ((Account) other).id == this.id;
     }
 
 }
