@@ -1,6 +1,5 @@
 package concurrency.transaction;
 
-import java.util.List;
 import concurrency.locking.Lock;
 import account.AccountManager;
 import java.util.ArrayList;
@@ -37,8 +36,8 @@ public class Transaction {
     }
 
     @Override
-    public boolean equals( Object other) {
-        return other instanceof Transaction && ((Transaction) other).transactionID = this.transactionID;
+    public boolean equals(Object other) {
+        return other instanceof Transaction && ((Transaction) other).transactionID == this.transactionID;
     }
 
 }

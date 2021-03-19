@@ -6,6 +6,7 @@ import concurrency.locking.*;
 import concurrency.transaction.Transaction;
 
 public class AccountManager {
+    public static int numOfAccounts;
     List<Account> accounts = new ArrayList<>();
 
     private static AccountManager instance = null;
@@ -20,7 +21,7 @@ public class AccountManager {
 
     // constructor for account Manager
     private AccountManager() {
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < numOfAccounts; i++) {
             accounts.add(new Account(420));
         }
     }

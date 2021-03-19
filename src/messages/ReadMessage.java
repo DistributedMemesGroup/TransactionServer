@@ -1,9 +1,10 @@
 package messages;
 
 public class ReadMessage extends Message {
-    public long accountNumber;
+    static final long serialVersionUID = 420l;
+    public int accountNumber;
 
-    public ReadMessage(long accountNumber) {
+    public ReadMessage(int accountNumber) {
         super(MessageType.READ);
         this.accountNumber = accountNumber;
     }

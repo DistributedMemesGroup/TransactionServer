@@ -1,9 +1,10 @@
 package messages;
 
 public class CloseMessage extends Message {
-    long accountNumber;
+    static final long serialVersionUID = 420l;
+    int accountNumber;
 
-    public CloseMessage(long accountNumber) {
+    public CloseMessage(int accountNumber) {
         super(MessageType.CLOSE);
         this.accountNumber = accountNumber;
     }

@@ -21,13 +21,18 @@ public class Account {
         return balance;
     }
 
-    public void adjustBalance(int value) {
-        balance += value;
+    public boolean adjustBalance(int value) {
+        int potentialbalance = balance + value;
+        if (potentialbalance < 0) {
+            return false;
+        }
+        balance = potentialbalance;
+        return true;
     }
 
     @Override
     public boolean equals(Object other) {
-       return other instanceof Account && ((Account) other).id == this.id;
+        return other instanceof Account && ((Account) other).id == this.id;
     }
 
 }

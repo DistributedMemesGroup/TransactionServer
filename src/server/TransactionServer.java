@@ -5,45 +5,37 @@ import concurrency.locking.LockManager;
 import account.*;
 import java.io.IOException;
 import java.net.ServerSocket;
+import static utils.Utils.*;
 
 public class TransactionServer {
-    public final int port;
+    public static int port;
+
     public static final TransactionManager transactionManager = TransactionManager.getInstance();
     public static final AccountManager accountManager = AccountManager.getInstance();
     public static final LockManager lockManager = LockManager.getInstance();
 
-    public TransactionServer() {
-        port = 8001;
-    }
-
-    public TransactionServer(int port) {
-        this.port = port;
-    }
-
     public static void main(String[] args) {
-        TransactionServer server;
-        if (args.length > 1) {
-            server = new TransactionServer(Integer.parseInt(args[1]));
+        if (args.length == 2 && isInt(args[0]) && isInt(args[1])) {
+            port = Integer.parseInt(args[0]);
+            AccountManager.numOfAccounts = Integer.parseInt(args[1]);
         } else {
-            server = new TransactionServer();
+            System.err.println("Argument format:\n\t[port number - required] [number of accounts - required]");
+            System.exit(69);
         }
-        ServerSocket serverSocket = null;
-        try {
-            serverSocket = new ServerSocket(server.port);
+
+        try (var serverSocket = new ServerSocket(port)) {
+            while (true) {
+                try {
+                    transactionManager.handleConnection(serverSocket.accept());
+                } catch (IOException e) {
+                    System.out.println("Error");
+                    System.exit(69);
+                }
+            }
         } catch (IOException e) {
             System.out.println("Failed to open server socket");
             e.printStackTrace();
             System.exit(69);
         }
-        
-        while (true) {
-            try {
-                transactionManager.handleConnection(serverSocket.accept());
-            } catch (IOException e) {
-                System.out.println("Error");
-                System.exit(69);
-            }
-        }
     }
-
 }

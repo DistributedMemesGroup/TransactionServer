@@ -4,11 +4,11 @@ import messages.*;
 import java.net.Socket;
 import java.io.*;
 
-public class ServerProxy implements Runnable {
+public class ServerProxy {
     String IP;
     int port;
 
-    public ServerProxy(String ip, int port) throws IOException {
+    public ServerProxy(String ip, int port) {
         this.IP = ip;
         this.port = port;
     }
@@ -19,8 +19,7 @@ public class ServerProxy implements Runnable {
 
     public void write(int accountNumber, int amount) {
         WriteMessage message = new WriteMessage(accountNumber, amount);
-        try (var conn = openConnection()) {
-            var oos = new ObjectOutputStream(conn.getOutputStream());
+        try (var conn = openConnection(); var oos = new ObjectOutputStream(conn.getOutputStream())) {
             oos.writeObject(message);
         } catch (IOException e) {
             System.err.println("Couldn't write to transaction socket!");
@@ -32,12 +31,12 @@ public class ServerProxy implements Runnable {
     public int read(int accountNumber) {
         ReadMessage message = new ReadMessage(accountNumber);
         int balance = -1;
-        try (var conn = openConnection()) {
-            // Notify the user of a new connection\
-            var oos = new ObjectOutputStream(conn.getOutputStream());
-            var ois = new ObjectInputStream(conn.getInputStream());
+        try (var conn = openConnection();
+                var oos = new ObjectOutputStream(conn.getOutputStream());
+                var ois = new ObjectInputStream(conn.getInputStream());) {
+
             oos.writeObject(message);
-            balance = ois.readint();
+            balance = ois.readInt();
         } catch (Exception e) {
             System.err.println("Couldn't read from transaction socket!");
             e.printStackTrace();
@@ -52,11 +51,11 @@ public class ServerProxy implements Runnable {
             var oos = new ObjectOutputStream(conn.getOutputStream());
             var ois = new ObjectInputStream(conn.getInputStream());
             oos.writeObject(new OpenMessage());
-            return ois.readint();
+            return ois.readInt();
         } catch (Exception e) {
             System.err.println("Couldn't open transaction!");
             e.printStackTrace();
-            return -1l;
+            return -1;
         }
     }
 
@@ -70,10 +69,4 @@ public class ServerProxy implements Runnable {
             e.printStackTrace();
         }
     }
-
-    @Override
-    public void run() {
-
-    }
-
 }

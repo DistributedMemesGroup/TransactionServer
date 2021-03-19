@@ -1,6 +1,5 @@
 package concurrency.locking;
 
-import java.util.List;
 import account.Account;
 import concurrency.transaction.Transaction;
 import java.util.HashSet;
@@ -8,6 +7,7 @@ import java.util.HashSet;
 public class LockManager {
     HashSet<Lock> locks;
     private static LockManager instance = null;
+
     private LockManager() {
         // Init our empty list of locks to start
         locks = new HashSet<>();
