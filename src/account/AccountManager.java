@@ -21,6 +21,10 @@ public class AccountManager {
 
     // constructor for account Manager
     private AccountManager() {
+        
+    }
+
+    public void createAccounts() {
         for (int i = 0; i < numOfAccounts; i++) {
             accounts.add(new Account(420));
         }
