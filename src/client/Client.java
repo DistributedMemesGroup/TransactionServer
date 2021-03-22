@@ -13,10 +13,12 @@ public class Client {
             System.err.println("Argument format:\n\t[IPv4 address - required] [port number  - required]");
             System.exit(69);
         }
+        transactionTest1();
     }
 
     // Simplest test, withdraw from one account and deposit to another.
     public static boolean transactionTest1() {
+        int transactionID = proxy.openTransaction();
         Random rand = new Random();
         int srcAcct = rand.nextInt(10);
 
@@ -28,6 +30,7 @@ public class Client {
         // Now we have two diff accounts, get their balances.
         int srcBal = proxy.read(srcAcct);
         int dstBal = proxy.read(dstAcct);
+        System.out.printf("%d is Source, %d is Dest", srcBal, dstAcct);
 
         // Check if we can actually read a valid balance
         if (srcBal == -1 || dstBal == -1) {
@@ -42,6 +45,7 @@ public class Client {
 
         // Deposit to dst
         proxy.write(dstAcct, dstBal + withdrawAmt);
+        proxy.closeTransaction(transactionID);
 
         // Return success of the test itself.
         return true;
