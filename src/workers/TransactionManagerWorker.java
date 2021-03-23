@@ -7,10 +7,12 @@ import java.net.Socket;
 import account.AccountManager;
 import concurrency.transaction.TransactionManager;
 import messages.*;
+import logger.Logger;
 
 public class TransactionManagerWorker implements Runnable {
     Socket conn;
-    TransactionManager transactionManager = TransactionManager.getInstance();
+    public static final TransactionManager transactionManager = TransactionManager.getInstance();
+    public static final Logger logger = Logger.getInstance();
     AccountManager accountManager = AccountManager.getInstance();
     int currentTransactionId = -1;
 
@@ -24,7 +26,7 @@ public class TransactionManagerWorker implements Runnable {
             do {
                 Object rawMessage = ois.readObject();
                 if (rawMessage == null) {
-                    System.err.println("Received message is null");
+                    logger.logError("Received message is null");
                     return;
                 }
                 var inMessage = (Message) rawMessage;
@@ -36,7 +38,7 @@ public class TransactionManagerWorker implements Runnable {
                 }
             } while (currentTransactionId != -1);
         } catch (IOException | ClassNotFoundException e) {
-            System.err.printf("There was an IO problem:\n\t%s\n", e.getMessage());
+            logger.logError(String.format("There was an IO problem:\n\t%s\n", e.getMessage()));
         }
 
     }
@@ -47,27 +49,28 @@ public class TransactionManagerWorker implements Runnable {
         try {
             oos.writeInt(currentTransactionId);
         } catch (IOException e) {
-            System.err.printf("Error in opening Transaction %d:\nCould not return ID to client\n",
-                    currentTransactionId);
+            logger.logError(String.format("Error in opening Transaction %d:\nCould not return ID to client\n",
+                    currentTransactionId));
         }
     }
 
     private void handleRead(ReadMessage message, ObjectOutputStream oos) {
-        System.out.println("Transaction " + currentTransactionId + " reading account:  " + message.accountNumber);
+        logger.logInfo("Transaction " + currentTransactionId + " reading account:  " + message.accountNumber);
         var transaction = transactionManager.getTransaction(currentTransactionId);
         if (transaction != null) {
             var accountAmount = accountManager.read(message.accountNumber, transaction);
             try {
                 oos.writeInt(accountAmount);
             } catch (IOException e) {
-                System.err.printf("Error in Transaction %d reading Account %d:\nCould not return %d to client\n",
-                        currentTransactionId, message.accountNumber, accountAmount);
+                logger.logError(
+                        String.format("Error in Transaction %d reading Account %d:\nCould not return %d to client\n",
+                                currentTransactionId, message.accountNumber, accountAmount));
             }
         }
     }
 
     private void handleWrite(WriteMessage message) {
-        System.out.println("Transaction " + currentTransactionId + " reading account:  " + message.accountNumber);
+        logger.logInfo("Transaction " + currentTransactionId + " reading account:  " + message.accountNumber);
         var transaction = transactionManager.getTransaction(currentTransactionId);
         if (transaction != null) {
             accountManager.write(message.accountNumber, message.amount, transaction);
@@ -75,7 +78,7 @@ public class TransactionManagerWorker implements Runnable {
     }
 
     private void handleClose(CloseMessage message) {
-        System.out.printf("Closed Transaction %d\n", currentTransactionId);
+        logger.logInfo(String.format("Closed Transaction %d\n", currentTransactionId));
         transactionManager.removeTransaction(currentTransactionId);
         currentTransactionId = -1; // end the loop
     }

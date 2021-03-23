@@ -1,6 +1,7 @@
 package concurrency.transaction;
 
 import concurrency.locking.Lock;
+import logger.Logger;
 import account.AccountManager;
 import java.util.ArrayList;
 
@@ -8,6 +9,7 @@ public class Transaction {
     int transactionID;
     ArrayList<Lock> locks;
     AccountManager accountManager;
+    public static final Logger logger = Logger.getInstance();
 
     public Transaction(int ID) {
         accountManager = AccountManager.getInstance();
@@ -16,12 +18,12 @@ public class Transaction {
     }
 
     public int read(int accountNumber) {
-        System.out.println("Transaction " + transactionID + "e reading account:  " + accountNumber);
+        logger.logInfo("Transaction " + transactionID + "e reading account:  " + accountNumber);
         return accountManager.read(accountNumber, this);
     }
 
     public void write(int accountNumber, int amount) {
-        System.out.println(
+        logger.logInfo(
                 "Transaction " + transactionID + ": writing account: " + accountNumber + " with value: " + amount);
         // Call the accountManager interface to write the amount
         accountManager.write(accountNumber, amount, this);

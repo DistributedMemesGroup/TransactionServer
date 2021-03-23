@@ -2,11 +2,15 @@ package client;
 
 import messages.*;
 import java.net.Socket;
+
+import logger.Logger;
+
 import java.io.*;
 
 public class ServerProxy {
     String IP;
     int port;
+    public final Logger logger = Logger.getInstance();
 
     public ServerProxy(String ip, int port) {
         this.IP = ip;
@@ -22,7 +26,7 @@ public class ServerProxy {
         try (var conn = openConnection(); var oos = new ObjectOutputStream(conn.getOutputStream())) {
             oos.writeObject(message);
         } catch (IOException e) {
-            System.err.println("Couldn't write to transaction socket!");
+            logger.logError("Couldn't write to transaction socket!");
             e.printStackTrace();
         }
     }
@@ -38,7 +42,7 @@ public class ServerProxy {
             oos.writeObject(message);
             balance = ois.readInt();
         } catch (Exception e) {
-            System.err.println("Couldn't read from transaction socket!");
+            logger.logError("Couldn't read from transaction socket!");
             e.printStackTrace();
         }
         return balance;
@@ -53,7 +57,7 @@ public class ServerProxy {
             oos.writeObject(new OpenMessage());
             return ois.readInt();
         } catch (Exception e) {
-            System.err.println("Couldn't open transaction!");
+            logger.logError("Couldn't open transaction!");
             e.printStackTrace();
             return -1;
         }
@@ -65,7 +69,7 @@ public class ServerProxy {
             var oos = new ObjectOutputStream(conn.getOutputStream());
             oos.writeObject(new CloseMessage(transactionID));
         } catch (Exception e) {
-            System.err.println("Couldn't close transaction!");
+            logger.logError("Couldn't close transaction!");
             e.printStackTrace();
         }
     }

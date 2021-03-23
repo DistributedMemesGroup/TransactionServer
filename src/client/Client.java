@@ -1,16 +1,20 @@
 package client;
 
 import java.util.Random;
+
+import logger.Logger;
+
 import static utils.Utils.*;
 
 public class Client {
     static ServerProxy proxy;
+    public static final Logger logger = Logger.getInstance();
 
     public static void main(String[] args) {
         if (isValidIpAddr(args[0]) && isInt(args[1])) {
             proxy = new ServerProxy(args[0], Integer.parseInt(args[1]));
         } else {
-            System.err.println("Argument format:\n\t[IPv4 address - required] [port number  - required]");
+            logger.logError("Argument format:\n\t[IPv4 address - required] [port number  - required]");
             System.exit(69);
         }
         transactionTest1();
@@ -30,13 +34,13 @@ public class Client {
         // Now we have two diff accounts, get their balances.
         int srcBal = proxy.read(srcAcct);
         int dstBal = proxy.read(dstAcct);
-        System.out.printf("%d is Source, %d is Dest", srcBal, dstAcct);
+        logger.logInfo(String.format("%d is Source, %d is Dest", srcBal, dstAcct));
 
         // Check if we can actually read a valid balance
         if (srcBal == -1 || dstBal == -1) {
-            System.err.printf(
+            logger.logError(String.format(
                     "One of the account balances was not read correctly, stopping test.\nAccount %d balance: %d\nAccount %d balance: %d\n",
-                    srcAcct, srcBal, dstAcct, dstBal);
+                    srcAcct, srcBal, dstAcct, dstBal));
             return false;
         }
         int withdrawAmt = rand.nextInt(srcBal + 1);
