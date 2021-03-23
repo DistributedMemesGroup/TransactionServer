@@ -8,4 +8,9 @@ public class ReadMessage extends Message {
         super(MessageType.READ);
         this.accountNumber = accountNumber;
     }
+
+    @Override
+    public String toString() {
+        return String.format("ReadMessage{ accountNumber = %d }", accountNumber);
+    }
 }

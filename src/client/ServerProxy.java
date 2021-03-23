@@ -21,56 +21,74 @@ public class ServerProxy {
         return new Socket(IP, port);
     }
 
-    public void write(int accountNumber, int amount) {
-        WriteMessage message = new WriteMessage(accountNumber, amount);
-        try (var conn = openConnection(); var oos = new ObjectOutputStream(conn.getOutputStream())) {
+    // Returns -1 on error
+    public int openTransaction() {
+        logger.logInfo("Trying to open transaction");
+        try (var conn = openConnection()) {
+            // Notify the user of a new connection\
+            var oos = new ObjectOutputStream(conn.getOutputStream());
+            var ois = new ObjectInputStream(conn.getInputStream());
+            var message = new OpenMessage();
+            logger.logInfo(String.format("Trying to send %s", message.toString()));
             oos.writeObject(message);
-        } catch (IOException e) {
-            logger.logError("Couldn't write to transaction socket!");
-            e.printStackTrace();
+            logger.logInfo(String.format("Sent %s", message.toString()));
+            logger.logInfo("Waiting for transaction ID");
+            var transactionId = ois.readInt();
+            logger.logInfo(String.format("Received transaction ID %d", transactionId));
+            return transactionId;
+        } catch (Exception e) {
+            logger.logError("Couldn't open transaction!");
+            logger.logError(e);
+            return -1;
         }
     }
 
     // Returns -1 on error
     public int read(int accountNumber) {
-        ReadMessage message = new ReadMessage(accountNumber);
+        logger.logInfo(String.format("Trying to read account %d's balance", accountNumber));
+        var message = new ReadMessage(accountNumber);
         int balance = -1;
         try (var conn = openConnection();
                 var oos = new ObjectOutputStream(conn.getOutputStream());
                 var ois = new ObjectInputStream(conn.getInputStream());) {
-
+            logger.logInfo(String.format("Trying to send %s", message.toString()));
             oos.writeObject(message);
+            logger.logInfo(String.format("Sent %s", message.toString()));
+            logger.logInfo(String.format("Waiting for account %d's balance", accountNumber));
             balance = ois.readInt();
+            logger.logInfo(String.format("Recieved account %d's balance: %d", accountNumber, balance));
         } catch (Exception e) {
             logger.logError("Couldn't read from transaction socket!");
-            e.printStackTrace();
+            logger.logError(e);
         }
         return balance;
     }
 
-    // Returns -1 on error
-    public int openTransaction() {
-        try (var conn = openConnection()) {
-            // Notify the user of a new connection\
-            var oos = new ObjectOutputStream(conn.getOutputStream());
-            var ois = new ObjectInputStream(conn.getInputStream());
-            oos.writeObject(new OpenMessage());
-            return ois.readInt();
-        } catch (Exception e) {
-            logger.logError("Couldn't open transaction!");
-            e.printStackTrace();
-            return -1;
+    public void write(int accountNumber, int amount) {
+        logger.logInfo(String.format("Trying to write %d to account %d's balance", amount, accountNumber));
+        var message = new WriteMessage(accountNumber, amount);
+        try (var conn = openConnection(); var oos = new ObjectOutputStream(conn.getOutputStream())) {
+            logger.logInfo(String.format("Trying to send %s", message.toString()));
+            oos.writeObject(message);
+            logger.logInfo(String.format("Sent %s", message.toString()));
+        } catch (IOException e) {
+            logger.logError("Couldn't write to transaction socket!");
+            logger.logError(e);
         }
     }
 
     public void closeTransaction(int transactionID) {
+        logger.logInfo(String.format("Trying to close transaction %d", transactionID));
+        var message = new CloseMessage(transactionID);
         try (var conn = openConnection()) {
             // Notify the user of a new connection\
             var oos = new ObjectOutputStream(conn.getOutputStream());
-            oos.writeObject(new CloseMessage(transactionID));
+            logger.logInfo(String.format("Trying to send %s", message.toString()));
+            oos.writeObject(message);
+            logger.logInfo(String.format("Sent %s", message.toString()));
         } catch (Exception e) {
             logger.logError("Couldn't close transaction!");
-            e.printStackTrace();
+            logger.logError(e);
         }
     }
 }

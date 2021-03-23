@@ -2,10 +2,15 @@ package messages;
 
 public class CloseMessage extends Message {
     static final long serialVersionUID = 420l;
-    int accountNumber;
+    int transactionId;
 
-    public CloseMessage(int accountNumber) {
+    public CloseMessage(int transactionId) {
         super(MessageType.CLOSE);
-        this.accountNumber = accountNumber;
+        this.transactionId = transactionId;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("CloseMessage{ accountNumber = %d }", transactionId);
     }
 }

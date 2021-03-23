@@ -28,6 +28,7 @@ public class TransactionServer {
         try (var serverSocket = new ServerSocket(port)) {
             while (true) {
                 try {
+                    logger.logInfo("Client trying to connect");
                     transactionManager.handleConnection(serverSocket.accept());
                 } catch (IOException e) {
                     logger.logError("Error");

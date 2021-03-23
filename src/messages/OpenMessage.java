@@ -6,4 +6,9 @@ public class OpenMessage extends Message {
     public OpenMessage() {
         super(MessageType.OPEN);
     }
+
+    @Override
+    public String toString() {
+        return "OpenMessage{ }";
+    }
 }

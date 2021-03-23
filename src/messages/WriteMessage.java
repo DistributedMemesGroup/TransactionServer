@@ -10,4 +10,9 @@ public class WriteMessage extends Message {
         this.accountNumber = accountNumber;
         this.amount = amount;
     }
+
+    @Override
+    public String toString() {
+        return String.format("WriteMessage{ accountNumber = %d, amount = %d }", accountNumber, amount);
+    }
 }
