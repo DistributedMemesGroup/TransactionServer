@@ -17,11 +17,12 @@ public class TransactionServer {
     public static final Logger logger = Logger.getInstance();
 
     public static void main(String[] args) {
-        if (args.length == 2 && isInt(args[0]) && isInt(args[1])) {
+        if (args.length == 3 && isInt(args[0]) && isInt(args[1]) && isInt(args[2])) {
             port = Integer.parseInt(args[0]);
-            AccountManager.numOfAccounts = Integer.parseInt(args[1]);
+            accountManager.createAccounts(Integer.parseInt(args[1]), Integer.parseInt(args[2]));
         } else {
-            logger.logError("Argument format:\n\t[port number - required] [number of accounts - required]");
+            logger.logError("Argument format:\n"
+                    + "\t[port number - required] [number of accounts - required] [initial value - required]");
             System.exit(69);
         }
 

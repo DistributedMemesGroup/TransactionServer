@@ -23,6 +23,10 @@ public class Client {
     // Simplest test, withdraw from one account and deposit to another.
     public static boolean transactionTest1() {
         int transactionID = proxy.openTransaction();
+        if (transactionID == -1) {
+            logger.logError("Could not open transaction");
+            return false;
+        }
         Random rand = new Random();
         int srcAcct = rand.nextInt(10);
 
@@ -32,9 +36,9 @@ public class Client {
             dstAcct = rand.nextInt(10);
         }
         // Now we have two diff accounts, get their balances.
-        int srcBal = proxy.read(srcAcct);
-        int dstBal = proxy.read(dstAcct);
-        logger.logInfo(String.format("%d is Source, %d is Dest", srcBal, dstAcct));
+        int srcBal = proxy.read(srcAcct, transactionID);
+        int dstBal = proxy.read(dstAcct, transactionID);
+        logger.logInfo(String.format("%d is Source, %d is Dest", srcAcct, dstAcct));
 
         // Check if we can actually read a valid balance
         if (srcBal == -1 || dstBal == -1) {
@@ -45,10 +49,10 @@ public class Client {
         }
         int withdrawAmt = rand.nextInt(srcBal + 1);
         // Withdraw from the src
-        proxy.write(srcAcct, srcBal - withdrawAmt);
+        proxy.write(srcAcct, srcBal - withdrawAmt, transactionID);
 
         // Deposit to dst
-        proxy.write(dstAcct, dstBal + withdrawAmt);
+        proxy.write(dstAcct, dstBal + withdrawAmt, transactionID);
         proxy.closeTransaction(transactionID);
 
         // Return success of the test itself.

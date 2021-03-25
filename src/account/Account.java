@@ -21,13 +21,8 @@ public class Account {
         return balance;
     }
 
-    public boolean adjustBalance(int value) {
-        int potentialbalance = balance + value;
-        if (potentialbalance < 0) {
-            return false;
-        }
-        balance = potentialbalance;
-        return true;
+    public void writeBalance(int value) {
+        balance = value;
     }
 
     @Override

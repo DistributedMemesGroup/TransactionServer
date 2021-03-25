@@ -1,39 +1,38 @@
 package workers;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.Socket;
 import account.AccountManager;
 import concurrency.transaction.TransactionManager;
 import messages.*;
+import utils.TransactionConnection;
 import logger.Logger;
 
 public class TransactionManagerWorker implements Runnable {
-    Socket conn;
+    private final TransactionConnection conn;
     public static final TransactionManager transactionManager = TransactionManager.getInstance();
     public final Logger logger = Logger.getInstance();
     AccountManager accountManager = AccountManager.getInstance();
     int currentTransactionId = -1;
 
-    public TransactionManagerWorker(Socket conn) {
+    public TransactionManagerWorker(TransactionConnection conn) {
         this.conn = conn;
     }
 
     public void run() {
         logger.logInfo("Worker started");
-        try (var ois = new ObjectInputStream(conn.getInputStream());
-                var oos = new ObjectOutputStream(conn.getOutputStream())) {
+        try (conn) {
             do {
-                Object rawMessage = ois.readObject();
+                conn.out().flush();
+                Object rawMessage = conn.in().readObject();
                 if (rawMessage == null) {
                     logger.logError("Received message is null");
                     return;
                 }
                 var inMessage = (Message) rawMessage;
                 switch (inMessage.getType()) {
-                case OPEN -> handleOpen((OpenMessage) inMessage, oos);
-                case READ -> handleRead((ReadMessage) inMessage, oos);
+                case OPEN -> handleOpen((OpenMessage) inMessage, conn.out());
+                case READ -> handleRead((ReadMessage) inMessage, conn.out());
                 case WRITE -> handleWrite((WriteMessage) inMessage);
                 case CLOSE -> handleClose((CloseMessage) inMessage);
                 }
@@ -51,6 +50,7 @@ public class TransactionManagerWorker implements Runnable {
         try {
             logger.logInfo(String.format("Sending transaction ID %d back to client", currentTransactionId));
             oos.writeInt(currentTransactionId);
+            oos.flush();
             logger.logInfo(String.format("Transaction ID %d sent back to client", currentTransactionId));
         } catch (IOException e) {
             logger.logError(String.format("Error in opening Transaction %d:\nCould not return ID to client\n",

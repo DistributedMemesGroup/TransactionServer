@@ -1,13 +1,18 @@
 package concurrency.transaction;
 
+import java.io.IOException;
 import java.net.Socket;
 import workers.TransactionManagerWorker;
 import java.util.Hashtable;
+
+import logger.Logger;
+import utils.TransactionConnection;
 
 public class TransactionManager {
     private Hashtable<Integer, Transaction> transactions = new Hashtable<>();
     private static TransactionManager instance = null;
     private static int currentId = 0;
+    private final Logger logger = Logger.getInstance();
 
     public static TransactionManager getInstance() {
         if (instance == null) {
@@ -16,10 +21,16 @@ public class TransactionManager {
         return instance;
     }
 
-    public void handleConnection(Socket conn) {
+    public void handleConnection(Socket socket) {
         // Spawn the transacmanagerworkerthread with conn
-        Thread transacWorkerThread = new Thread(new TransactionManagerWorker(conn));
-        transacWorkerThread.start();
+        try {
+            var conn = new TransactionConnection(socket);
+            Thread transacWorkerThread = new Thread(new TransactionManagerWorker(conn));
+            transacWorkerThread.start();
+        } catch (IOException e) {
+            logger.logError("Could not open connection with client");
+            logger.logError(e);
+        }
 
     }
 
