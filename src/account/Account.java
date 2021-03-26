@@ -30,4 +30,8 @@ public class Account {
         return other instanceof Account && ((Account) other).id == this.id;
     }
 
+    public int getId() {
+        return this.id;
+    }
+
 }

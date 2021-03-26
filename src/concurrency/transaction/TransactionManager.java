@@ -5,12 +5,14 @@ import java.net.Socket;
 import workers.TransactionManagerWorker;
 import java.util.Hashtable;
 
+import concurrency.locking.LockManager;
 import logger.Logger;
 import utils.TransactionConnection;
 
 public class TransactionManager {
     private Hashtable<Integer, Transaction> transactions = new Hashtable<>();
     private static TransactionManager instance = null;
+    private static final LockManager lockManager = LockManager.getInstance();
     private static int currentId = 0;
     private final Logger logger = Logger.getInstance();
 
@@ -52,6 +54,7 @@ public class TransactionManager {
     }
 
     public synchronized void removeTransaction(int transactionId) {
-        transactions.remove(transactionId);
+        var transaction = transactions.remove(transactionId);
+        lockManager.unlock(transaction);
     }
 }

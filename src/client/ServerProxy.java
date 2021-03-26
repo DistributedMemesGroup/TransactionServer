@@ -80,6 +80,7 @@ public class ServerProxy {
             logger.logInfo(String.format("Trying to send %s", message.toString()));
             conn.out().writeObject(message);
             logger.logInfo(String.format("Sent %s", message.toString()));
+            conn.in().readInt();
         } catch (IOException e) {
             logger.logError("Couldn't write to transaction socket!");
             logger.logError(e);

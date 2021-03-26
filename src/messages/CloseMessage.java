@@ -11,6 +11,6 @@ public class CloseMessage extends Message {
 
     @Override
     public String toString() {
-        return String.format("CloseMessage{ accountNumber = %d }", transactionId);
+        return String.format("CloseMessage{ transactionId = %d }", transactionId);
     }
 }

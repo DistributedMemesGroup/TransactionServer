@@ -1,5 +1,6 @@
 package client;
 
+import java.util.Map;
 import java.util.Random;
 
 import logger.Logger;
@@ -11,29 +12,42 @@ public class Client {
     public static final Logger logger = Logger.getInstance();
 
     public static void main(String[] args) {
-        if (isValidIpAddr(args[0]) && isInt(args[1])) {
-            proxy = new ServerProxy(args[0], Integer.parseInt(args[1]));
+        Map<String, String> env = System.getenv();
+        String ipAddr = env.get("SERVER_ADDR");
+        String portArg = env.get("SERVER_PORT");
+        String transactionCntArg = env.get("TRANSACTION_CNT");
+        String accountCntArg = env.get("ACCOUNT_CNT");
+        if (isValidIpAddr(ipAddr) && isInt(portArg) && isInt(transactionCntArg) && isInt(accountCntArg)) {
+            proxy = new ServerProxy(ipAddr, Integer.parseInt(portArg));
         } else {
-            logger.logError("Argument format:\n\t[IPv4 address - required] [port number  - required]");
+            logger.logError("Required Environment Variables:\n" + "\tSERVER_ADDR : IPv4 address\n"
+                    + "\tSERVER_PORT : int\n" + "\tTRANSACTION_CNT : int\n");
             System.exit(69);
         }
-        transactionTest1();
+        var transactionCnt = Integer.parseInt(transactionCntArg);
+        var accountCnt = Integer.parseInt(accountCntArg);
+        for (int i = 0; i < transactionCnt; i++) {
+            var test = new Thread(() -> {
+                runTransactionTest(accountCnt);
+            });
+            test.start();
+        }
     }
 
     // Simplest test, withdraw from one account and deposit to another.
-    public static boolean transactionTest1() {
+    public static boolean runTransactionTest(int accountCnt) {
         int transactionID = proxy.openTransaction();
         if (transactionID == -1) {
             logger.logError("Could not open transaction");
             return false;
         }
         Random rand = new Random();
-        int srcAcct = rand.nextInt(10);
+        int srcAcct = rand.nextInt(accountCnt);
 
-        int dstAcct = rand.nextInt(10);
+        int dstAcct = rand.nextInt(accountCnt);
         // If we roll the same account, make a new id to deposit to.
         while (srcAcct == dstAcct) {
-            dstAcct = rand.nextInt(10);
+            dstAcct = rand.nextInt(accountCnt);
         }
         // Now we have two diff accounts, get their balances.
         int srcBal = proxy.read(srcAcct, transactionID);
@@ -57,10 +71,6 @@ public class Client {
 
         // Return success of the test itself.
         return true;
-    }
-
-    public static void transactionTest2() {
-
     }
 
 }

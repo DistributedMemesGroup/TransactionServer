@@ -40,42 +40,42 @@ public class TransactionManagerWorker implements Runnable {
         } catch (IOException | ClassNotFoundException e) {
             logger.logError(String.format("There was an IO problem:\n\t%s\n", e.getMessage()));
         }
-
     }
 
     private void handleOpen(OpenMessage message, ObjectOutputStream oos) {
         // Add transaction to list of transactions in TransacManager
         currentTransactionId = transactionManager.addTransaction();
-        logger.logInfo(String.format("Opened transaction %d", currentTransactionId));
+        logger.logInfo(String.format("Transaction %d: opened", currentTransactionId));
         try {
-            logger.logInfo(String.format("Sending transaction ID %d back to client", currentTransactionId));
+            logger.logInfo(String.format("Transaction %d: sending ID back to client", currentTransactionId));
             oos.writeInt(currentTransactionId);
             oos.flush();
-            logger.logInfo(String.format("Transaction ID %d sent back to client", currentTransactionId));
+            logger.logInfo(String.format("Transaction %d: sent back to client", currentTransactionId));
         } catch (IOException e) {
-            logger.logError(String.format("Error in opening Transaction %d:\nCould not return ID to client\n",
+            logger.logError(String.format("Transaction %d: error in opening:\nCould not return ID to client\n",
                     currentTransactionId));
         }
     }
 
     private void handleRead(ReadMessage message, ObjectOutputStream oos) {
         logger.logInfo(
-                String.format("Transaction %d reading account: %d", currentTransactionId, message.accountNumber));
+                String.format("Transaction %d: reading account %d", currentTransactionId, message.accountNumber));
         var transaction = transactionManager.getTransaction(currentTransactionId);
         if (transaction != null) {
-            logger.logInfo(String.format("Trying to read account %d", message.accountNumber));
+            logger.logInfo(String.format("Transaction %d: Trying to read account %d", currentTransactionId,
+                    message.accountNumber));
             var accountAmount = accountManager.read(message.accountNumber, transaction);
-            logger.logInfo(String.format("Read account %d: %d", message.accountNumber, accountAmount));
+            logger.logInfo(String.format("Transaction %d: read account %d: %d", currentTransactionId,
+                    message.accountNumber, accountAmount));
             try {
-                logger.logInfo(String.format("Trying to send account %d's balance (%d) back to client",
-                        message.accountNumber, accountAmount));
+                logger.logInfo(String.format("Transaction %d: Trying to send account %d's balance (%d) back to client",
+                        currentTransactionId, message.accountNumber, accountAmount));
                 oos.writeInt(accountAmount);
-                logger.logInfo(String.format("Sent account %d's balance (%d) back to client", message.accountNumber,
-                        accountAmount));
-                logger.logInfo(String.format("Trying to read account %d", message.accountNumber));
+                logger.logInfo(String.format("Transaction %d: Sent account %d's balance (%d) back to client",
+                        currentTransactionId, message.accountNumber, accountAmount));
             } catch (IOException e) {
                 logger.logError(
-                        String.format("Error in Transaction %d reading Account %d:\nCould not return %d to client\n",
+                        String.format("Transaction %d: error in reading Account %d:\nCould not return %d to client\n",
                                 currentTransactionId, message.accountNumber, accountAmount));
             }
         }
@@ -83,18 +83,27 @@ public class TransactionManagerWorker implements Runnable {
 
     private void handleWrite(WriteMessage message) {
         logger.logInfo(
-                String.format("Transaction %d writing to account %d", currentTransactionId, message.accountNumber));
+                String.format("Transaction %d: writing to account %d", currentTransactionId, message.accountNumber));
         var transaction = transactionManager.getTransaction(currentTransactionId);
         if (transaction != null) {
-            logger.logInfo(String.format("Trying to write %d to account %d", message.amount, message.accountNumber));
+            logger.logInfo(String.format("Transaction %d: Trying to write %d to account %d", currentTransactionId,
+                    message.amount, message.accountNumber));
             accountManager.write(message.accountNumber, message.amount, transaction);
-            logger.logInfo(String.format("Wrote %d to account %d", message.amount, message.accountNumber));
+            logger.logInfo(String.format("Transaction %d: Wrote %d to account %d", currentTransactionId, message.amount,
+                    message.accountNumber));
+            try {
+                conn.out().writeInt(message.amount);
+            } catch (IOException e) {
+                logger.logError(String.format(
+                        "Transaction %d: error in writing to Account %d:\nCould not return %d to client\n",
+                        currentTransactionId, message.accountNumber, message.amount));
+            }
         }
     }
 
     private void handleClose(CloseMessage message) {
         transactionManager.removeTransaction(currentTransactionId);
-        logger.logInfo(String.format("Closed Transaction %d\n", currentTransactionId));
+        logger.logInfo(String.format("Transaction %d: Closed\n", currentTransactionId));
         currentTransactionId = -1; // end the loop
     }
 }

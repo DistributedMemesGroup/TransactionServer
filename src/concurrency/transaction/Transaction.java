@@ -18,19 +18,23 @@ public class Transaction {
     }
 
     public int read(int accountNumber) {
-        logger.logInfo("Transaction " + transactionID + "e reading account:  " + accountNumber);
+        logger.logInfo("Transaction " + transactionID + "e reading account  " + accountNumber);
         return accountManager.read(accountNumber, this);
     }
 
     public void write(int accountNumber, int amount) {
         logger.logInfo(
-                "Transaction " + transactionID + ": writing account: " + accountNumber + " with value: " + amount);
+                "Transaction " + transactionID + ": writing account " + accountNumber + " with value: " + amount);
         // Call the accountManager interface to write the amount
         accountManager.write(accountNumber, amount, this);
     }
 
     public ArrayList<Lock> getLocks() {
         return locks;
+    }
+
+    public int getId() {
+        return this.transactionID;
     }
 
     public void addLock(Lock lock) {
