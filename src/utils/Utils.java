@@ -3,6 +3,7 @@ package utils;
 import java.util.Arrays;
 
 public class Utils {
+    //Checks if the given IP address is valid
     public static boolean isValidIpAddr(String ipAddr) {
         if (ipAddr != null) {
             String[] frags = ipAddr.split("\\.");
