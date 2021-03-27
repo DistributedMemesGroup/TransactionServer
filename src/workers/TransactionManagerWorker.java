@@ -9,12 +9,13 @@ import utils.TransactionConnection;
 import logger.Logger;
 
 public class TransactionManagerWorker implements Runnable {
+    //Init variables
     private final TransactionConnection conn;
     public static final TransactionManager transactionManager = TransactionManager.getInstance();
     public final Logger logger = Logger.getInstance();
     AccountManager accountManager = AccountManager.getInstance();
     int currentTransactionId = -1;
-
+    
     public TransactionManagerWorker(TransactionConnection conn) {
         this.conn = conn;
     }
@@ -22,6 +23,7 @@ public class TransactionManagerWorker implements Runnable {
     public void run() {
         logger.logInfo("Worker started");
         try (conn) {
+            //read our message that we receieved
             do {
                 conn.out().flush();
                 Object rawMessage = conn.in().readObject();
@@ -29,6 +31,7 @@ public class TransactionManagerWorker implements Runnable {
                     logger.logError("Received message is null");
                     return;
                 }
+                //Check our current message received type
                 var inMessage = (Message) rawMessage;
                 switch (inMessage.getType()) {
                 case OPEN -> handleOpen((OpenMessage) inMessage, conn.out());
@@ -56,14 +59,18 @@ public class TransactionManagerWorker implements Runnable {
                     currentTransactionId));
         }
     }
-
+    
+    //Read from the given account
     private void handleRead(ReadMessage message, ObjectOutputStream oos) {
+        //Attempt a read on the current transaction
         logger.logInfo(
                 String.format("Transaction %d: reading account %d", currentTransactionId, message.accountNumber));
         var transaction = transactionManager.getTransaction(currentTransactionId);
+        //Check if there is a current lock
         if (transaction != null) {
             logger.logInfo(String.format("Transaction %d: Trying to read account %d", currentTransactionId,
                     message.accountNumber));
+            //read our data
             var accountAmount = accountManager.read(message.accountNumber, transaction);
             logger.logInfo(String.format("Transaction %d: read account %d: %d", currentTransactionId,
                     message.accountNumber, accountAmount));
@@ -80,14 +87,16 @@ public class TransactionManagerWorker implements Runnable {
             }
         }
     }
-
+    //Write to the given account
     private void handleWrite(WriteMessage message) {
         logger.logInfo(
                 String.format("Transaction %d: writing to account %d", currentTransactionId, message.accountNumber));
         var transaction = transactionManager.getTransaction(currentTransactionId);
         if (transaction != null) {
+            //Check if we have a lock
             logger.logInfo(String.format("Transaction %d: Trying to write %d to account %d", currentTransactionId,
                     message.amount, message.accountNumber));
+            //Write amount to account
             accountManager.write(message.accountNumber, message.amount, transaction);
             logger.logInfo(String.format("Transaction %d: Wrote %d to account %d", currentTransactionId, message.amount,
                     message.accountNumber));
@@ -100,7 +109,8 @@ public class TransactionManagerWorker implements Runnable {
             }
         }
     }
-
+    
+    //Close our current transaction
     private void handleClose(CloseMessage message) {
         transactionManager.removeTransaction(currentTransactionId);
         logger.logInfo(String.format("Transaction %d: Closed\n", currentTransactionId));
