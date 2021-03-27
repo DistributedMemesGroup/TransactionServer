@@ -19,7 +19,8 @@ public class ServerProxy {
         this.IP = ip;
         this.port = port;
     }
-
+    
+    //opens new connection
     private Socket openConnection() throws IOException {
         return new Socket(IP, port);
     }
@@ -33,13 +34,15 @@ public class ServerProxy {
             var conn = new TransactionConnection(openConnection());
             // Notify the user of a new connection\
 
-            conn.out().flush();
+            conn.out().flush()
+            //create new open message to send 
             var message = new OpenMessage();
             logger.logInfo(String.format("Trying to send %s", message.toString()));
             conn.out().writeObject(message);
             conn.out().flush();
             logger.logInfo(String.format("Sent %s", message.toString()));
             logger.logInfo("Waiting for transaction ID");
+            //Add current transaction to our active connections
             var transactionId = conn.in().readInt();
             transactionConnections.put(transactionId, conn);
             logger.logInfo(String.format("Received transaction ID %d", transactionId));
@@ -54,15 +57,19 @@ public class ServerProxy {
     // Returns -1 on error
     public int read(int accountNumber, int transactionId) {
         logger.logInfo(String.format("Trying to read account %d's balance", accountNumber));
+        //create read message
         var message = new ReadMessage(accountNumber);
         int balance = -1;
+        //check if we can read from given account number
         try {
             var conn = transactionConnections.get(transactionId);
             logger.logInfo(String.format("Trying to send %s", message.toString()));
+            //send message
             conn.out().writeObject(message);
             conn.out().flush();
             logger.logInfo(String.format("Sent %s", message.toString()));
             logger.logInfo(String.format("Waiting for account %d's balance", accountNumber));
+            //set balance to return of our conn
             balance = conn.in().readInt();
             logger.logInfo(String.format("Recieved account %d's balance: %d", accountNumber, balance));
         } catch (Exception e) {
@@ -71,13 +78,17 @@ public class ServerProxy {
         }
         return balance;
     }
-
+    
+    //write amount to desired account
     public void write(int accountNumber, int amount, int transactionID) {
         logger.logInfo(String.format("Trying to write %d to account %d's balance", amount, accountNumber));
+        //Create write message
         var message = new WriteMessage(accountNumber, amount);
         try {
+            //Get connection for given transaction ID
             var conn = transactionConnections.get(transactionID);
             logger.logInfo(String.format("Trying to send %s", message.toString()));
+            //write our amount to the given account
             conn.out().writeObject(message);
             logger.logInfo(String.format("Sent %s", message.toString()));
             conn.in().readInt();
@@ -86,9 +97,11 @@ public class ServerProxy {
             logger.logError(e);
         }
     }
-
+    
+    //Close out transaction
     public void closeTransaction(int transactionID) {
         logger.logInfo(String.format("Trying to close transaction %d", transactionID));
+        //create our close message
         var message = new CloseMessage(transactionID);
         try (var conn = transactionConnections.get(transactionID)) {
             // Notify the user of a new connection\
