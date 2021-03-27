@@ -1,5 +1,6 @@
 package messages;
 
+//Create message of type cRead
 public class ReadMessage extends Message {
     static final long serialVersionUID = 420l;
     public int accountNumber;
