@@ -2,7 +2,6 @@ package server;
 
 import concurrency.transaction.TransactionManager;
 import logger.Logger;
-import concurrency.locking.LockManager;
 import account.*;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -12,11 +11,10 @@ import java.util.Map;
 
 public class TransactionServer {
     // init variables
-    public static int listenPort = 0;
-    public static final TransactionManager transactionManager = TransactionManager.getInstance();
-    public static final AccountManager accountManager = AccountManager.getInstance();
-    public static final LockManager lockManager = LockManager.getInstance();
-    public static final Logger logger = Logger.getInstance();
+    private static final TransactionManager transactionManager = TransactionManager.getInstance();
+    private static final AccountManager accountManager = AccountManager.getInstance();
+    private static final Logger logger = Logger.getInstance();
+    public static boolean applyLocking = true;
 
     public static void main(String[] args) {
         // assign Variables
@@ -24,17 +22,20 @@ public class TransactionServer {
         String listenPortArg = env.get("LISTEN_PORT");
         String accountCntArg = env.get("ACCOUNT_CNT");
         String accountBalArg = env.get("ACCOUNT_BAL");
+        String applyLockingArg = env.get("LOCKING");
         int accountCnt = 0;
         int accountInitialBalance = 0;
+        int listenPort = 0;
         // Check for valid inputs
-        if (isInt(listenPortArg) && isInt(accountCntArg) && isInt(accountBalArg)) {
+        if (isInt(listenPortArg) && isInt(accountCntArg) && isInt(accountBalArg) && applyLockingArg != null) {
             listenPort = Integer.parseInt(listenPortArg);
             accountCnt = Integer.parseInt(accountCntArg);
             accountInitialBalance = Integer.parseInt(accountBalArg);
+            applyLocking = applyLockingArg.equals("yes");
 
         } else {
             logger.logError("Required Environment Variables:\n" + "\tLISTEN_PORT : int\n" + "\tACCOUNT_CNT : int\n"
-                    + "\tACCOUNT_BAL : int\n");
+                    + "\tACCOUNT_BAL : int\n" + "\tLOCKING : 'yes' or 'no'\n");
             System.exit(69);
         }
         // Create designated accounts with designated balance
