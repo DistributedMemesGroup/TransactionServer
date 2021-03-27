@@ -11,12 +11,15 @@ public class Client {
     static ServerProxy proxy;
     public static final Logger logger = Logger.getInstance();
 
-    public static void main(String[] args) {
+    public static void main(String[] args) 
+        //Create a map based on our env variables
+        //Init Variables
         Map<String, String> env = System.getenv();
         String ipAddr = env.get("SERVER_ADDR");
         String portArg = env.get("SERVER_PORT");
         String transactionCntArg = env.get("TRANSACTION_CNT");
         String accountCntArg = env.get("ACCOUNT_CNT");
+        //Check if environment variables are valid
         if (isValidIpAddr(ipAddr) && isInt(portArg) && isInt(transactionCntArg) && isInt(accountCntArg)) {
             proxy = new ServerProxy(ipAddr, Integer.parseInt(portArg));
         } else {
@@ -24,6 +27,8 @@ public class Client {
                     + "\tSERVER_PORT : int\n" + "\tTRANSACTION_CNT : int\n");
             System.exit(69);
         }
+    
+        //Get number of accounts and transactions
         var transactionCnt = Integer.parseInt(transactionCntArg);
         var accountCnt = Integer.parseInt(accountCntArg);
         for (int i = 0; i < transactionCnt; i++) {
