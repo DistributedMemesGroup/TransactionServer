@@ -16,15 +16,18 @@ public class TransactionConnection implements Closeable {
         out = new ObjectOutputStream(socket.getOutputStream());
         in = new ObjectInputStream(socket.getInputStream());
     }
-
+    
+    //Get object output stream
     public ObjectOutputStream out() {
         return out;
     }
-
+    
+    //Get object input stream
     public ObjectInputStream in() {
         return in;
     }
-
+    
+    //Close connection
     public void close() throws java.io.IOException {
         out.close();
         in.close();
