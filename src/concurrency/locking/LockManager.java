@@ -5,7 +5,10 @@ import concurrency.transaction.Transaction;
 import java.util.Hashtable;
 
 import logger.Logger;
-
+/**
+ * Controls the assignment and creation of new and existing locks. Serves as an 
+ * interface for all lock based operations. 
+ */
 public class LockManager {
     Hashtable<Lock, Boolean> locks;
     private static LockManager instance = null;
@@ -22,7 +25,12 @@ public class LockManager {
         }
         return instance;
     }
-
+    /**
+     * Searches for the lock tied to a specific account 
+     * @param inputAccount The account that needs a lock set or used
+     * @param trans The transaction requesting to lock
+     * @param lockType The type of lock requested.
+     */
     public void setLock(Account inputAccount, Transaction trans, LockType lockType) {
         Lock targetLock = null;
         // Syncrhonize the search through the locks list
@@ -47,7 +55,10 @@ public class LockManager {
         // Since we found or created the lock, acquire it.
         targetLock.acquire(trans, lockType);
     }
-
+    /**
+     * This will unlock all locks associated with the passed transaction
+     * @param trans The transaction that is releasing its locks. 
+     */
     public synchronized void unlock(Transaction trans) {
         // Release all locks that contain the trans as a holder.
         logger.logInfo("Transaction " + trans.getId() + ": is releasing its held locks.");

@@ -26,7 +26,13 @@ public class Lock {
         this.lockType = null;
         this.holders = Collections.synchronizedList(new ArrayList<>());
     }
-
+    /**
+     * This method is called when a transaction acquires this lock tied to an
+     * account it wants to read or write to, if possible given the existence
+     * of conflicting operations.
+     * @param newTrans The transaction who seeks to acquire the lock.
+     * @param desiredType The type of lock needed by newTrans.
+     */
     public synchronized void acquire(Transaction newTrans, LockType desiredType) {
         // If we cannot acquire a lock, wait until notified.
         while (!(holders.isEmpty() || isOnlyHolder(newTrans) || bothReadLocks(desiredType))) {
@@ -62,7 +68,8 @@ public class Lock {
     }
 
     /**
-     * Releases the transaction from the list of holders for the lock
+     * Releases all locks held by the input transaction. 
+     * @param releasingTrans The transaction that will release locks.
      */
     public synchronized void release(Transaction releasingTrans) {
         // Check this lock type
