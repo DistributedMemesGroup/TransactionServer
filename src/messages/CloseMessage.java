@@ -1,5 +1,6 @@
 package messages;
 
+//Message of type close
 public class CloseMessage extends Message {
     static final long serialVersionUID = 420l;
     int transactionId;
