@@ -6,4 +6,4 @@ TransactionServer.iml
 # log files
 *.log
 # Build directories
-/out
+out/

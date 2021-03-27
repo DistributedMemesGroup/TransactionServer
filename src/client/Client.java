@@ -1,7 +1,7 @@
 package client;
 
 import java.util.Map;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import logger.Logger;
 
@@ -11,15 +11,15 @@ public class Client {
     static ServerProxy proxy;
     public static final Logger logger = Logger.getInstance();
 
-    public static void main(String[] args) 
-        //Create a map based on our env variables
-        //Init Variables
+    public static void main(String[] args) {
+        // Create a map based on our env variables
+        // Init Variables
         Map<String, String> env = System.getenv();
         String ipAddr = env.get("SERVER_ADDR");
         String portArg = env.get("SERVER_PORT");
         String transactionCntArg = env.get("TRANSACTION_CNT");
         String accountCntArg = env.get("ACCOUNT_CNT");
-        //Check if environment variables are valid
+        // Check if environment variables are valid
         if (isValidIpAddr(ipAddr) && isInt(portArg) && isInt(transactionCntArg) && isInt(accountCntArg)) {
             proxy = new ServerProxy(ipAddr, Integer.parseInt(portArg));
         } else {
@@ -27,8 +27,8 @@ public class Client {
                     + "\tSERVER_PORT : int\n" + "\tTRANSACTION_CNT : int\n");
             System.exit(69);
         }
-    
-        //Get number of accounts and transactions
+
+        // Get number of accounts and transactions
         var transactionCnt = Integer.parseInt(transactionCntArg);
         var accountCnt = Integer.parseInt(accountCntArg);
         for (int i = 0; i < transactionCnt; i++) {
@@ -46,7 +46,7 @@ public class Client {
             logger.logError("Could not open transaction");
             return false;
         }
-        Random rand = new Random();
+        ThreadLocalRandom rand = ThreadLocalRandom.current();
         int srcAcct = rand.nextInt(accountCnt);
 
         int dstAcct = rand.nextInt(accountCnt);
@@ -57,11 +57,11 @@ public class Client {
         // Now we have two diff accounts, get their balances.
         int srcBal = proxy.read(srcAcct, transactionID);
         int dstBal = proxy.read(dstAcct, transactionID);
-        logger.logInfo(String.format("%d is Source, %d is Dest", srcAcct, dstAcct));
+        logger.logInfo(transactionID, String.format("%d is Source, %d is Dest", srcAcct, dstAcct));
 
         // Check if we can actually read a valid balance
         if (srcBal == -1 || dstBal == -1) {
-            logger.logError(String.format(
+            logger.logError(transactionID, String.format(
                     "One of the account balances was not read correctly, stopping test.\nAccount %d balance: %d\nAccount %d balance: %d\n",
                     srcAcct, srcBal, dstAcct, dstBal));
             return false;
