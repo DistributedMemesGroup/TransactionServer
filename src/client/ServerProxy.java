@@ -25,8 +25,8 @@ public class ServerProxy {
         return new Socket(IP, port);
     }
 
-    // Returns -1 on error
-    public int openTransaction() {
+    // returns the transaction ID on success and null on failure
+    public Integer openTransaction() {
         logger.logInfo("Trying to open transaction");
 
         try {
@@ -47,19 +47,18 @@ public class ServerProxy {
             transactionConnections.put(transactionId, conn);
             logger.logInfo(transactionId, "opened");
             return transactionId;
-        } catch (Exception e) {
-            logger.logError("Couldn't open transaction!");
-            logger.logError(e);
-            return -1;
+        } catch (IOException e) {
+            logger.logError("Couldn't open transaction! The server took too long to respond.");
+            return null;
         }
     }
 
-    // Returns -1 on error
-    public int read(int accountNumber, int transactionId) {
+    // returns the balance on success and null on failure
+    public Integer read(int accountNumber, int transactionId) {
         logger.logInfo(String.format("Trying to read account %d's balance", accountNumber));
         // create read message
         var message = new ReadMessage(accountNumber);
-        int balance = -1;
+        int balance = 0;
         // check if we can read from given account number
         try {
             var conn = transactionConnections.get(transactionId);
@@ -72,15 +71,17 @@ public class ServerProxy {
             // set balance to return of our conn
             balance = conn.in().readInt();
             logger.logInfo(transactionId, String.format("Recieved account %d's balance: %d", accountNumber, balance));
+            return balance;
         } catch (Exception e) {
-            logger.logError(transactionId, "Couldn't read from transaction socket!");
-            logger.logError(transactionId, e);
+            logger.logError(transactionId,
+                    "Couldn't read from transaction socket! The server took too long to respond.");
+            return null;
         }
-        return balance;
     }
 
     // write amount to desired account
-    public void write(int accountNumber, int amount, int transactionID) {
+    // returns 0 on success and null on failure
+    public Integer write(int accountNumber, int amount, int transactionID) {
         logger.logInfo(transactionID,
                 String.format("Trying to write %d to account %d's balance", amount, accountNumber));
         // Create write message
@@ -93,14 +94,16 @@ public class ServerProxy {
             conn.out().writeObject(message);
             logger.logInfo(transactionID, String.format("Sent %s", message.toString()));
             conn.in().readInt();
+            return 0;
         } catch (IOException e) {
-            logger.logError(transactionID, "Couldn't write to transaction socket!");
-            logger.logError(transactionID, e);
+            logger.logError(transactionID,
+                    "Couldn't write to transaction socket! The server took too long to respond.");
+            return null;
         }
     }
 
     // Close out transaction
-    public void closeTransaction(int transactionID) {
+    public Integer closeTransaction(int transactionID) {
         logger.logInfo(transactionID, "Trying to close");
         // create our close message
         var message = new CloseMessage(transactionID);
@@ -109,9 +112,10 @@ public class ServerProxy {
             logger.logInfo(transactionID, String.format("Trying to send %s", message.toString()));
             conn.out().writeObject(message);
             logger.logInfo(transactionID, String.format("Sent %s", message.toString()));
-        } catch (Exception e) {
-            logger.logError(transactionID, "Couldn't close transaction!");
-            logger.logError(transactionID, e);
+            return 0;
+        } catch (IOException e) {
+            logger.logError(transactionID, "Couldn't close transaction! The server took too long to respond.");
+            return null;
         } finally {
             transactionConnections.remove(transactionID);
         }

@@ -5,27 +5,28 @@ import java.net.Socket;
 import workers.TransactionManagerWorker;
 import java.util.Hashtable;
 
+import account.AccountManager;
 import concurrency.locking.LockManager;
 import logger.Logger;
 import utils.TransactionConnection;
 
 public class TransactionManager {
-    //init variables
+    // init variables
     private Hashtable<Integer, Transaction> transactions = new Hashtable<>();
     private static TransactionManager instance = null;
     private static final LockManager lockManager = LockManager.getInstance();
     private static int currentId = 0;
     private final Logger logger = Logger.getInstance();
-    
-    //Get current instance of transaction
+
+    // Get current instance of transaction
     public static TransactionManager getInstance() {
         if (instance == null) {
             instance = new TransactionManager();
         }
         return instance;
     }
-    
-     // Spawn the transacmanagerworkerthread with conn
+
+    // Spawn the transacmanagerworkerthread with conn
     public void handleConnection(Socket socket) {
         try {
             var conn = new TransactionConnection(socket);
@@ -37,8 +38,8 @@ public class TransactionManager {
         }
 
     }
-    
-    //Add a transaction to out hash map
+
+    // Add a transaction to out hash map
     public synchronized int addTransaction() {
         Transaction newTrans = new Transaction(currentId);
         // Put the transaction in the hashtable with its id.
@@ -47,8 +48,8 @@ public class TransactionManager {
         currentId++;
         return newTrans.transactionID;
     }
-    
-    //Get information of the desired transaction
+
+    // Get information of the desired transaction
     public synchronized Transaction getTransaction(int transactionId) {
         if (transactions.containsKey(transactionId)) {
             return transactions.get(transactionId);
@@ -56,10 +57,14 @@ public class TransactionManager {
             return null;
         }
     }
-    
-    //Remove transaction from the map
+
+    // Remove transaction from the map
     public synchronized void removeTransaction(int transactionId) {
         var transaction = transactions.remove(transactionId);
         lockManager.unlock(transaction);
+        if (transactions.size() == 0) {
+            logger.logInfo(String.format("Branch Total: %d", AccountManager.getInstance().branchTotal()));
+            System.exit(0);
+        }
     }
 }

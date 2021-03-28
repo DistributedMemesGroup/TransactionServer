@@ -10,7 +10,6 @@ import static utils.Utils.*;
 import java.util.Map;
 
 public class TransactionServer {
-    // init variables
     private static final TransactionManager transactionManager = TransactionManager.getInstance();
     private static final AccountManager accountManager = AccountManager.getInstance();
     private static final Logger logger = Logger.getInstance();

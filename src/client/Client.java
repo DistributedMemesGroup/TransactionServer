@@ -41,8 +41,8 @@ public class Client {
 
     // Simplest test, withdraw from one account and deposit to another.
     public static boolean runTransactionTest(int accountCnt) {
-        int transactionID = proxy.openTransaction();
-        if (transactionID == -1) {
+        Integer transactionID = proxy.openTransaction();
+        if (transactionID == null) {
             logger.logError("Could not open transaction");
             return false;
         }
@@ -55,26 +55,43 @@ public class Client {
             dstAcct = rand.nextInt(accountCnt);
         }
         // Now we have two diff accounts, get their balances.
-        int srcBal = proxy.read(srcAcct, transactionID);
-        int dstBal = proxy.read(dstAcct, transactionID);
         logger.logInfo(transactionID, String.format("%d is Source, %d is Dest", srcAcct, dstAcct));
 
-        // Check if we can actually read a valid balance
-        if (srcBal == -1 || dstBal == -1) {
-            logger.logError(transactionID, String.format(
-                    "One of the account balances was not read correctly, stopping test.\nAccount %d balance: %d\nAccount %d balance: %d\n",
-                    srcAcct, srcBal, dstAcct, dstBal));
+        Integer srcBal = proxy.read(srcAcct, transactionID);
+        if (srcBal == null) {
+            logger.logError(transactionID,
+                    String.format("Account %d's balance was not read correctly, stopping test.", srcAcct));
             return false;
         }
+
+        Integer dstBal = proxy.read(dstAcct, transactionID);
+        if (dstBal == null) {
+            logger.logError(transactionID,
+                    String.format("Account %d's balance was not read correctly, stopping test.", dstAcct));
+            return false;
+        }
+
         int withdrawAmt = rand.nextInt(srcBal + 1);
         // Withdraw from the src
-        proxy.write(srcAcct, srcBal - withdrawAmt, transactionID);
+        if (proxy.write(srcAcct, srcBal - withdrawAmt, transactionID) == null) {
+            logger.logError(transactionID,
+                    String.format("Could not write %d to account %d, stopping test.", srcBal - withdrawAmt, dstAcct));
+            return false;
+        }
 
         // Deposit to dst
-        proxy.write(dstAcct, dstBal + withdrawAmt, transactionID);
-        proxy.closeTransaction(transactionID);
+        if (proxy.write(dstAcct, dstBal + withdrawAmt, transactionID) == null) {
+            logger.logError(transactionID,
+                    String.format("Could not write %d to account %d, stopping test.", dstBal + withdrawAmt, dstAcct));
+            return false;
+        }
 
-        // Return success of the test itself.
+        // Close transaction
+        if (proxy.closeTransaction(transactionID) == null) {
+            logger.logError(transactionID, "Could not properly close transaction, stopping test.");
+            return false;
+        }
+
         return true;
     }
 
